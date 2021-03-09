@@ -1,0 +1,44 @@
+Protocol: SSO
+
+#Protocol to authenticate user by webserver 
+
+Types:
+Agent U,W,n;
+Number NA,PMS,Code,Uri,ID,PK,tag,Payload,Reply;
+Function clientK,serverK,hash,pw,mac;
+
+Knowledge:
+#User
+U: U, W, n, pk(W), hash, clientK, serverK, pw(U,n), pk(n), mac, tag;
+#Website
+W: U, W, n, pk(n), inv(pk(W)), pk(W), hash, serverK,clientK;
+#Nemid server
+n: U, W, n, inv(pk(n)), pk(n), pk(W),pw(U,n),mac,hash; 
+
+Actions:
+
+    U->W: {tag, PMS } pk(W),
+	  {| W, PMS, PK, Uri |} clientK(PMS)
+
+    W->U: {| ID, Uri, U, PK |} serverK(PMS)
+
+    U->n: { U, W, ID, Uri, n, hash(pw(U,n), NA), PK, NA }  pk(n)
+
+    n->U: { W, n, U, Code, Uri, ID, PK } inv(pk(n))
+
+    U->n: { mac(hash(pw(U, n), NA), Code), U, W, Uri, ID, PK } pk(n) 
+
+    n->W: { W, U, Uri, ID, PK,{ U, W, Uri, ID, PK } inv(pk(n)) } pk(W)
+
+    W->U: {| Payload |} serverK(PMS)
+
+    U->W: {| Reply |} clientK(PMS)
+Goals:
+W authenticates U on PK,Reply
+Payload,Reply secret between W,U
+U authenticates W on Payload
+pw(U,n) guessable secret between U,n
+
+
+
+
