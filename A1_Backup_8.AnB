@@ -1,0 +1,85 @@
+Protocol: SSO
+
+#User can authenticate webserver
+#User is pseudonym agent 
+
+Types:
+Agent U,W,N;
+Number NA,Sid,NB,PMS,PA,PB,cprNumber,Code,g,X,Y;
+Function prf,clientK,serverK,hash,pw,mac,card;
+
+Knowledge:
+#User
+U: U, W, N, pk(W), pk(N), pk(U), inv(pk(U)), hash, prf, clientK,serverK, pw(U,N),mac,card;
+#Website
+W: U, W, N, pk(N), inv(pk(W)), pk(W), hash, prf, serverK,clientK, pw(U,N),g;
+#Nemid server
+N: U, W, N, sk(W, N), pw(U, N), mac, inv(pk(N)), pk(N), pk(N), pw(U,N), pk(W),mac,card,g,cprNumber; 
+ 
+Actions:
+    #Establish secure communication between User and website
+    U->W: U, NA, Sid, PA
+    
+    W->U: NB, Sid, PB
+
+    U->W: pk(U), { PMS } pk(W),
+	  { hash(NB, W, PMS ) } inv(pk(U)),
+	  {| hash(PMS, NA, NB), U, W, NA, NB, Sid, PA, PB, PMS |} clientK(NA, NB, prf(PMS, NA, NB))
+
+    W->U: {| hash(prf(PMS,NA,NB)), U, W, NA, NB, Sid, PA, PB, PMS |} serverK(NA, NB, prf(PMS,NA,NB))
+
+    #User website communication
+    U->W: {| U, { pw(U,N) } pk(N) |} clientK(NA, NB, prf(PMS, NA, NB))
+
+    #setup secure channel between website and nemid
+    W->N: { W, N, exp(g, X) } inv(pk(W))
+
+    N->W: { N, W, exp(g, Y) } inv(pk(N))
+
+    W->N: { { {U, pw(U,N) } pk(N), W } inv(pk(W)) } pk(N)
+
+    N->W: {| cprNumber |} exp(exp(g,X),Y)
+    
+    #send second factor auth code
+    #N->W: { Code, N, W, U } pk(W)
+
+    #W->U: {| hash(prf(PMS,NA,NB)), U, W, NA, NB, Sid, PA, PB, PMS, Code |} serverK(NA, NB, prf(PMS,NA,NB))
+
+    #U->W: {| hash(PMS, NA, NB), U, W, NA, NB, Sid, PA, PB, PMS, 
+	#  { mac(card(U), Code) } pk(N) |} clientK(NA, NB, prf(PMS, NA, NB))
+
+    #W->N: { { { mac(card(U), Code) } pk(N) } inv(pk(W)) } pk(N)
+
+    #Communication after establishing a secure channel between user and website
+    #U->W: {| U, W, pw(U, N) |} sk(U, W)
+    
+    #W->N: {| W, N, pw(U, N) |} sk(W, N)
+
+    #N->W: {| N, W, sf(U, N) |} sk(W, N)
+
+    #W->U: {| W, U, sf(U, N) |} sk(U, W)
+
+    #U->W: {| U, W, mac(sf(U, N)) |} sk(U, W)
+
+    #W->N: {| W, N, mac(sf(U, N)) |} sk(W, N)
+
+    #N->W: {| N, W, U, Valid |} sk(W, N)
+
+Goals:
+#mac(sf(U, N)) secret between U, W
+U authenticates W on prf(PMS, NA, NB)
+#N authenticates U on mac(card(U), Code)
+#exp(exp(g,X), Y) secret between N,W
+W authenticates N on cprNumber
+#N authenticates W on pw(cprNumber,N)
+#prf(PMS, NA, NB) secret between U,W
+
+#W authenticates U on Payload
+
+    
+
+
+
+
+
+

@@ -1,0 +1,78 @@
+Protocol: SSO
+
+#Simple protocol to authenticate webserver by user 
+
+Types:
+Agent U,W,n;
+Number Payload,X,Y,g,NA,Sid,NB,PK,PMS,PA,PB,cprNumber,Code,NU;
+Function prf,clientK,serverK,hash,pw,mac,card;
+
+Knowledge:
+#User
+U: U, W, n, g, pk(W), pk(U), inv(pk(U)), hash, prf, clientK,serverK,cprNumber,pw,mac,card,pk(n);
+#Website
+W: U, W, n, g, pk(n), inv(pk(W)), pk(W), hash, prf, serverK,clientK;
+#Nemid server
+n: W, n, inv(pk(n)), pk(n), pk(W),g,cprNumber,pw,mac,card; 
+ 
+Actions:
+    #U->W: U, NA, Sid, PA
+    
+    #W->U: NB, Sid, PB
+
+    U->W: pk(U), { PMS } pk(W),
+	  { hash( W, PMS ) } inv(pk(U)),
+	  {| cprNumber, pw(cprNumber, n), U, W, PMS |} clientK(prf(PMS))
+
+    W->n: { { cprNumber, pw(cprNumber, n) ,W, n, NA, pk(U), U, {| NA |} serverK(prf(PMS)) } inv(pk(W))} pk(n)
+
+    n->U: { W, n, cprNumber, Code, NA, {| NA |} serverK(prf(PMS)) } pk(U)
+    
+    #W->U: {| hash(PMS), U, W, Code, cprNumber |} serverK(prf(PMS))
+
+    #U->W: {| mac(card(cprNumber), Code),NA,U,W |} clientK(prf(PMS))
+
+    U->n: { mac(card(cprNumber), Code),NA,U,W } pk(n)
+
+    n->W: { { cprNumber, U, W, n } inv(pk(n)) } pk(W)
+
+    
+
+    #W->n: { { mac(card(cprNumber), Code) } inv(pk(W)) } pk(n)
+
+    #n->W: { { Code, cprNumber } inv(pk(n)) } pk(W)
+ 
+
+	
+    #Communication after establishing a secure channel between user and website
+    #U->W: {| U, W, pw(U, N) |} sk(U, W)
+    
+    #W->N: {| W, N, pw(U, N) |} sk(W, N)
+
+    #N->W: {| N, W, sf(U, N) |} sk(W, N)
+
+    #W->U: {| W, U, sf(U, N) |} sk(U, W)
+
+    #U->W: {| U, W, mac(sf(U, N)) |} sk(U, W)
+
+    #W->N: {| W, N, mac(sf(U, N)) |} sk(W, N)
+
+    #N->W: {| N, W, U, Valid |} sk(W, N)
+
+Goals:
+#mac(sf(U, N)) secret between U, W
+U authenticates W on prf(PMS)
+#n weakly authenticates W on cprNumber  
+
+#prf(PMS, NA, NB) secret between U,W
+
+
+#W authenticates U on Payload
+
+    
+
+
+
+
+
+

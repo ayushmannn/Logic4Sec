@@ -1,0 +1,77 @@
+Protocol: SSO
+
+#connection between website and nemid without DH
+
+Types:
+Agent W,n;
+Number g,X,Y,Payload,NA,NB,tag; 
+
+Knowledge:
+#User
+#U: U, W, N, pk(W), pk(N), pk(U), inv(pk(U)), hash, prf, clientK,serverK, pw(U,N),mac,card;
+#Website
+W: W, n, pk(n), inv(pk(W)), pk(W) ,g,tag;
+#Nemid server
+n: W, n, inv(pk(n)), pk(n), pk(W),g,tag; 
+ 
+Actions:
+    #Establish secure communication between User and website
+
+    #setup secure channel between website and nemid
+    #W->n: { W, n, exp(g, X) } inv(pk(W))
+
+    #n->W: { n, W, exp(g, Y) } inv(pk(n))
+
+    #W->n: {| { Payload } inv(pk(W)) |} exp(exp(g,Y),X)
+
+    W->n: {W,n} pk(n)
+    n->W: {NB,NA} pk(W)
+    
+    W->n: { {NA, W, n, Payload} inv(pk(W)) }pk(n)
+
+    n->W: { {NA, W, n,NB} inv(pk(n)) } pk(W)
+
+    #send second factor auth code
+   
+    #Communication after establishing a secure channel between user and website
+    #U->W: {| U, W, pw(U, N) |} sk(U, W)
+    
+    #W->N: {| W, N, pw(U, N) |} sk(W, N)
+
+    #N->W: {| N, W, sf(U, N) |} sk(W, N)
+
+    #W->U: {| W, U, sf(U, N) |} sk(U, W)
+
+    #U->W: {| U, W, mac(sf(U, N)) |} sk(U, W)
+
+    #W->N: {| W, N, mac(sf(U, N)) |} sk(W, N)
+
+    #N->W: {| N, W, U, Valid |} sk(W, N)
+
+Goals:
+#mac(sf(U, N)) secret between U, W
+#U authenticates W on prf(PMS, NA, NB)
+#N authenticates U on mac(card(U), Code)
+#exp(exp(g,X), Y) secret between N,W
+Payload secret between n,W
+n authenticates W on Payload
+#W authenticates N on cprNumber
+#N authenticates W on pw(cprNumber,N)
+#prf(PMS, NA, NB) secret between U,W
+
+#W authenticates U on Payload
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+

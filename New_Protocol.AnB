@@ -1,0 +1,97 @@
+Protocol: SSO
+
+#Simple protocol to authenticate webserver by user 
+
+Types:
+Agent U,W,n;
+Number NA,PMS,Code,Uri,ID,PK;
+Function clientK,serverK,hash,pw,mac,validate;
+
+Knowledge:
+#User
+U: U, W, n, pk(W), pk(U), inv(pk(U)), hash, clientK,serverK,pw(U,n),pk(n),mac,validate;
+#Website
+W: U, W, n, pk(n), inv(pk(W)), pk(W), hash, serverK,clientK;
+#Nemid server
+n: U, W, n, inv(pk(n)), pk(n), pk(W),pw(U,n),mac,validate; 
+ 
+Actions:
+    #U->W: U, NA, Sid, PA
+    
+    #W->U: NB, Sid, PB
+
+    U->W: pk(U), { PMS } pk(W),
+	  {| W, PMS, { hash(W, PMS ) } inv(pk(U)),Uri |} clientK(PMS)
+
+
+    W->U: {| hash(W, PMS), ID, Uri |} serverK(PMS)
+
+    U->n: { U, W, ID, Uri, n, pw(U,n), PK }  pk(n)
+
+    n->U: {| { W, n, U, Code, Uri, ID } inv(pk(n)) |} validate(PK)
+
+    U->n: { mac(pw(U, n), Code),U,W,Uri,ID } pk(n) 
+
+    #n->U: { { U, W, Uri, ID } inv(pk(n)) } validate(PK) 
+    n->W: { W, Uri, ID, { U, W, Uri, ID } inv(pk(n)) } pk(W)
+
+
+#    W->n: { { { pw(U, n), U } pk(n) ,W, n, NA, pk(U), U, Uri } inv(pk(W))} pk(n)
+
+#    n->U: { { W, n, U, Code, NA, Uri } inv(pk(n)) } pk(U)    
+    
+    #W->U: {| hash(PMS), U, W, Code, cprNumber |} serverK(prf(PMS))
+
+#    U->W: {| mac(pw(U, n), Code), NA, U, W, Uri |} clientK(PMS)
+
+    #U->n: { card(cprNumber,Code),NA,U,W } pk(n)
+
+    #n->W: { { cprNumber, U, W, n } inv(pk(n)) } pk(W)
+
+    
+
+#    W->n: { { mac(pw(U,n), Code), NA, Uri } inv(pk(W)) } pk(n)
+
+#    n->W: { { U, W, n, NA, Uri } inv(pk(n)) } pk(W)
+ 
+
+	
+    #Communication after establishing a secure channel between user and website
+    #U->W: {| U, W, pw(U, N) |} sk(U, W)
+    
+    #W->N: {| W, N, pw(U, N) |} sk(W, N)
+
+    #N->W: {| N, W, sf(U, N) |} sk(W, N)
+
+    #W->U: {| W, U, sf(U, N) |} sk(U, W)
+
+    #U->W: {| U, W, mac(sf(U, N)) |} sk(U, W)
+
+    #W->N: {| W, N, mac(sf(U, N)) |} sk(W, N)
+
+    #N->W: {| N, W, U, Valid |} sk(W, N)
+
+Goals:
+#mac(sf(U, N)) secret between U, W
+##U authenticates W on NA
+#U authenticates n on Code
+##n authenticates U on mac(pw(U,n), Code)
+##W authenticates U on Uri
+#n authenticates U on mac(card(pw(U,n))
+#n weakly authenticates W on cprNumber  
+
+#prf(PMS, NA, NB) secret between U,W
+
+
+#W authenticates U on Payload
+
+W authenticates U on Uri
+  
+
+
+
+
+
+
+
+
