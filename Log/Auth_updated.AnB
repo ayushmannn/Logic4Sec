@@ -4,7 +4,7 @@ Protocol: SSO
 
 Types:
 Agent U,W,n;
-Number NA,PMS,Code,Uri,ID,PK,tag,Payload;
+Number NA,PMS,Code,Uri,ID,PK,tag,Payload,Reply;
 Function clientK,serverK,hash,pw,mac;
 
 Knowledge:
@@ -30,9 +30,13 @@ Actions:
 
     n->W: { W, U, Uri, ID, PK,{ U, W, Uri, ID, PK } inv(pk(n)) } pk(W)
 
-    W->U: {| Payload |} serverK(hash(PMS, PK))
+    W->U: {| Payload |} serverK(PMS)
+
+    U->W: {| Reply |} clientK(PMS)
 Goals:
-W authenticates U on PK
-Payload secret between W,U
+W authenticates U on PK,Reply
+Payload,Reply secret between W,U
+U authenticates W on Payload
+
 
 
