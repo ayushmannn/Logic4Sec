@@ -1,0 +1,51 @@
+Protocol: SSO
+
+#Protocol to authenticate user by webserver 
+
+Types:
+Agent U,W,n;
+Number NA,PMS,Code,Uri,ID,PK,tag,Payload,Reply,OI,PI;
+Function clientK,serverK,hash,pw,mac;
+
+Knowledge:
+#User
+U: U, W, n, pk(W), hash, clientK, serverK, pw(U,n), pk(n), mac, tag;
+#Website
+W: U, W, n, pk(n), inv(pk(W)), pk(W), hash, serverK,clientK;
+#Nemid server
+n: U, W, n, inv(pk(n)), pk(n), pk(W),pw(U,n),mac,hash; 
+
+Actions:
+
+    U->W: {tag, PMS, OI, hash(PI) } pk(W)
+
+    W->U: {| ID, U, OI|} serverK(PMS)
+
+    U->n: { U, W, ID, n, hash(pw(U,n), NA), NA, PI, hash(OI) }  pk(n)
+
+    n->U: { W, n, U, Code, ID } inv(pk(n))
+
+    U->n: { mac(hash(pw(U, n), NA), Code), U, W, ID} pk(n) 
+
+    n->W: { W, U, ID,{ U, W, ID, hash(hash(OI),hash(PI))} inv(pk(n)) } pk(W)
+
+    W->U: {|{ U, W, ID, hash(hash(OI),hash(PI))} inv(pk(n)) |} serverK(PMS)
+
+    #U->W: {| Reply |} clientK(PMS)
+
+Goals:
+#W authenticates U on Reply,PMS,Uri
+#U authenticates W on { U, W, ID, hash(hash(OI),hash(PI))} inv(pk(n)),ID
+W authenticates U on { U, W, ID, hash(hash(OI),hash(PI))} inv(pk(n)),ID
+pw(U,n) guessable secret between U,n
+OI secret between W,U
+PI secret between U,n
+{U, W, ID, hash(hash(OI),hash(PI))} inv(pk(n)) secret between W,U,n
+
+
+
+
+
+
+
+

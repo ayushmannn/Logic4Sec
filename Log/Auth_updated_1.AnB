@@ -17,27 +17,29 @@ n: U, W, n, inv(pk(n)), pk(n), pk(W),pw(U,n),mac,hash;
 
 Actions:
 
-    U->W: {tag, PMS } pk(W),
-	  {| W, PMS, PK, Uri |} clientK(PMS)
+    U->W: {tag, PMS, Uri } pk(W)
 
-    W->U: {| ID, Uri, U, PK |} serverK(PMS)
+    W->U: {| ID, U, Uri|} serverK(PMS)
 
-    U->n: { U, W, ID, Uri, n, hash(pw(U,n), NA), PK, NA }  pk(n)
+    U->n: { U, W, ID, n, hash(pw(U,n), NA), NA, Uri }  pk(n)
 
-    n->U: { W, n, U, Code, Uri, ID, PK } inv(pk(n))
+    n->U: { W, n, U, Code, ID, Uri } inv(pk(n))
 
-    U->n: { mac(hash(pw(U, n), NA), Code), U, W, Uri, ID, PK } pk(n) 
+    U->n: { mac(hash(pw(U, n), NA), Code), U, W, ID, Uri } pk(n) 
 
-    n->W: { W, U, Uri, ID, PK,{ U, W, Uri, ID, PK } inv(pk(n)) } pk(W)
+    n->W: { W, U, ID,{ U, W, ID, Uri } inv(pk(n)) } pk(W)
 
     W->U: {| Payload |} serverK(PMS)
 
     U->W: {| Reply |} clientK(PMS)
+
 Goals:
-W authenticates U on PK,Reply
+W authenticates U on Reply,PMS,Uri
 Payload,Reply secret between W,U
-U authenticates W on Payload
+U authenticates W on Payload,ID
 pw(U,n) guessable secret between U,n
+
+
 
 
 
